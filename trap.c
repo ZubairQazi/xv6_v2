@@ -78,6 +78,10 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
   case T_PGFLT:
+//  if (rcr2() != STACKBASE + (PGSIZE * myproc()->pages))
+    if (PGROUNDDOWN(rcr2()) != (STACKBASE + (PGSIZE * myproc()->pages) - PGSIZE))
+        break;
+    allocuvm(myproc()->pgdir, myproc()->sz, myproc()->sz + PGSIZE);
     myproc()->pages++;
     break;
 
