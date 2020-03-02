@@ -310,20 +310,27 @@ clearpteu(pde_t *pgdir, char *uva)
   *pte &= ~PTE_U;
 }
 
+/*
+    TODO 4: copyuvm().  This function is used as part of fork() to create
+    a copy of the address space of the parent process calling fork to the
+    child process.
+*/
+
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t*
-copyuvm(pde_t *pgdir, uint sz)
+copyuvm(struct proc* parent)
 {
-  pde_t *d;
-  pte_t *pte;
+  pde_t *d; // to return value
+  pte_t *pte; // pointer we use to check if when we walkpgdir
+  // if it is null, then we know we cannot walk the parent pg, so we panic
   uint pa, i, flags;
   char *mem;
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+  for(i = 0; i < parent->sz; i += PGSIZE){
+    if((pte = walkpgdir(parent->pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
@@ -338,6 +345,30 @@ copyuvm(pde_t *pgdir, uint sz)
   return d;
 
   struct proc *parent = myproc();
+  // to copy it for child, we need a few things
+  // i <= address of next available page location
+  // stackbase = 0x7FFFF... , PGSIZE = 4096
+  // this loop essentially, just goes through the stack, bottom=>top, and copies it
+  for (i = 0; i < parent->pages; ++i) {
+    uint new_page = (STACKBASE - ((PGSIZE * i) + PGSIZE - i - 1)); // next available page
+    // how we got this in the lab report
+    // check if we can walkpgdir @ the new_page location
+    // we can just copy the loop above checks
+    if ( (pte = walkpgdir(parent->pgdir, (void *)new_page, 0)) == 0 );
+      cprintf("unable to get next stack apge at new_page=%d=", new_page);
+      panic("copyuvm (stack): unable to get next stack page at new_page");
+    if (!(*pte & PTE_P))
+      cprintf("PTE_P not found on current stack, pte@new_page=%d=", new_page);
+      panic("copyuvm (stack): PTE_P not found on current stack");
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+    if((mem = kalloc()) == 0)
+      goto bad;
+    memmove(mem, (char*)P2V(pa), PGSIZE);
+    if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
+      goto bad;
+  }
+  return d;
 
 bad:
   freevm(d);
