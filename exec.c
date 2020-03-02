@@ -61,12 +61,25 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
+  /*
+   TODO 1: This is the part of the code that we need to change to move
+          the stack.  The current code calls allocuvm to create two pages, one for the stack
+          and one as a guard page starting at VA sz which is right after the
+          code and data.  It then clears the page table entry for the guard
+          page.
+  */
+
   // Allocate two pages at the next page boundary.
   // Make the first inaccessible.  Use the second as the user stack.
-  sz = PGROUNDUP(sz);
-  if((sz = allocuvm(pgdir, STACKBASE, STACKBASE - PGSIZE)) == 0)
+  //sz = PGROUNDUP(sz);
+  //if we assign it in the if statement, whats the point of the above line?
+  // mem: 0x000...0xFFFF, stack is at 0xFFFF, so we alloc from 0xFFF to 0xFADD (S-PG)
+  if ( (sz = allocuvm(pgdir, STACKBASE, (STACKBASE - PGSIZE) )) == 0)
     goto bad;
-//  clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  // commented out clearpteu() as we dont need to make an inaccessable page anymore
+  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  //sp = sz
+  // change stack pointer from sz to newly 
   sp = STACKBASE - PGSIZE;
 
   // Push argument strings, prepare rest of stack in ustack.

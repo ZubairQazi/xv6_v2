@@ -7,6 +7,17 @@
 #include "x86.h"
 #include "syscall.h"
 
+/*
+    TODO 3: All of the functions that are defined in syscall.c (and sysfile.c) for
+    accessing the user stack have some checks to see if the addresses are
+    indeed on the stack.  These checks compare the address against sz
+    since that was the top of the stack in the old implementation.  You
+    have to change those checks (or remove them if it is easier).  Check
+    all the accessor functions such as argint, argstr, argptr, argfd,
+    etc...
+ */
+
+
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
 // Arguments on the stack, from the user call to the C

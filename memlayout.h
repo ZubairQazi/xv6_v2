@@ -8,7 +8,13 @@
 #define KERNBASE 0x80000000         // First kernel virtual address
 #define KERNLINK (KERNBASE+EXTMEM)  // Address where kernel is linked
 
-#define STACKBASE 0x7FFFFFFF        // First stack virtual address
+/*
+ TODO 2: you will have to change this to the address of the top word in
+ the stack page.  Note that KERNBASE is the first word in the kernel
+ address space, so this is the word _right under_ that.
+ */
+
+#define STACKBASE 0x7FFFFFFF        // First stack virtual address, KERNBASE - 1
 
 #define V2P(a) (((uint) (a)) - KERNBASE)
 #define P2V(a) (((void *) (a)) + KERNBASE)
