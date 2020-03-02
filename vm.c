@@ -337,6 +337,8 @@ copyuvm(pde_t *pgdir, uint sz)
   }
   return d;
 
+  struct proc *parent = myproc();
+
 bad:
   freevm(d);
   return 0;
