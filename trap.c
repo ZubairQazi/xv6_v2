@@ -79,10 +79,14 @@ trap(struct trapframe *tf)
     break;
   case T_PGFLT:
 //  if (rcr2() != STACKBASE + (PGSIZE * myproc()->pages))
-    if (PGROUNDDOWN(rcr2()) != (STACKBASE + (PGSIZE * myproc()->pages) - PGSIZE))
-        break;
-    allocuvm(myproc()->pgdir, myproc()->sz, myproc()->sz + PGSIZE);
-    myproc()->pages++;
+    if (!(allocuvm(p->pgidr, PGROUNDDOWN(rcr2()), rcr2()))) {
+        cprintf("case PGFLT: failed");
+        exit();
+    }
+    else {
+        cprintf("case PGLFT: success");
+        myproc()->pages += 1;
+    }
     break;
 
   //PAGEBREAK: 13
