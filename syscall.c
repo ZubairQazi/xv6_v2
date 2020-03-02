@@ -43,19 +43,19 @@ fetchint(uint addr, int *ip)
 int
 fetchstr(uint addr, char **pp)
 {
-  char *s, *ep;
-  struct proc *curproc = myproc();
+  char *s;
+//  struct proc *curproc = myproc();
 
 //  if(addr >= curproc->sz)
 //    return -1;
 
   *pp = (char*)addr;
-  ep = (char*)curproc->sz;
-  for(s = *pp; s < ep; s++){
-    if(*s == 0)
-      return s - *pp;
+//  ep = (char*)curproc->sz;
+  s = *pp; 
+  while(*s != 0){
+    s++;
   }
-  return -1;
+  return (s - *pp) -1;
 }
 
 // Fetch the nth 32-bit system call argument.
@@ -74,10 +74,8 @@ argptr(int n, char **pp, int size)
   int i;
 //  struct proc *curproc = myproc();
  
-  argint(n, &i);
-
-  //if(argint(n, &i) < 0)
-  //  return -1;
+  if(argint(n, &i) < 0)
+    return -1;
   //if(size < 0 || (uint)i >= (STACKBASE - ((curproc->pages)*PGSIZE)) ||
   //        (uint)i+size > (STACKBASE - ((curproc->pages)*PGSIZE)) )
   //  return -1;

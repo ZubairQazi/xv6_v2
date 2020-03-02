@@ -18,7 +18,7 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
-  curproc->pages = 1;
+  // curproc->pages = 1;
 
   begin_op();
 
@@ -74,13 +74,14 @@ exec(char *path, char **argv)
   //sz = PGROUNDUP(sz);
   //if we assign it in the if statement, whats the point of the above line?
   // mem: 0x000...0xFFFF, stack is at 0xFFFF, so we alloc from 0xFFF to 0xFADD (S-PG)
+  sz = PGROUNDUP(sz);
   if ( (sz = allocuvm(pgdir, STACKBASE, (STACKBASE - PGSIZE) )) == 0)
     goto bad;
   // commented out clearpteu() as we dont need to make an inaccessable page anymore
   //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
   //sp = sz
   // change stack pointer from sz to newly 
-  sp = STACKBASE - PGSIZE;
+  sp = STACKBASE;
 
   // Push argument strings, prepare rest of stack in ustack.
   for(argc = 0; argv[argc]; argc++) {

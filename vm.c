@@ -344,13 +344,12 @@ copyuvm(struct proc* parent)
   }
   return d;
 
-  struct proc *parent = myproc();
   // to copy it for child, we need a few things
   // i <= address of next available page location
   // stackbase = 0x7FFFF... , PGSIZE = 4096
   // this loop essentially, just goes through the stack, bottom=>top, and copies it
   for (i = 0; i < parent->pages; ++i) {
-    uint new_page = (STACKBASE - ((PGSIZE * i) + PGSIZE - i - 1)); // next available page
+    uint new_page = STACKBASE - ((PGSIZE-1)*(i+1)); // next available page
     // how we got this in the lab report
     // check if we can walkpgdir @ the new_page location
     // we can just copy the loop above checks
