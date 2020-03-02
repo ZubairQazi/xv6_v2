@@ -85,9 +85,7 @@ trap(struct trapframe *tf)
 //      else
 //          we successfully allocate a page, increase
 //          the proc's page count and break
-    if (
-            !(allocuvm(p->pgidr, PGROUNDDOWN(rcr2()), rcr2()))
-        ) {
+    if (!(allocuvm(myproc()->pgdir, PGROUNDDOWN(rcr2()), rcr2()))) {
         cprintf("case PGFLT: failed");
         exit();
     }
