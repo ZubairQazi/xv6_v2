@@ -230,7 +230,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(oldsz);
-  for(; a < newsz; a += PGSIZE){
+  for(; a <= newsz; a += PGSIZE){
     mem = kalloc();
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
@@ -313,7 +313,7 @@ clearpteu(pde_t *pgdir, char *uva)
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t*
-copyuvm(pde_t *pgdir, uint sz)
+copyuvm(struct proc* p)
 {
   pde_t *d;
   pte_t *pte;
@@ -322,8 +322,8 @@ copyuvm(pde_t *pgdir, uint sz)
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = 0; i < sz; i += PGSIZE){
-    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+  for(i = 0; i < p->sz; i += PGSIZE){
+    if((pte = walkpgdir(p->pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
@@ -335,6 +335,26 @@ copyuvm(pde_t *pgdir, uint sz)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
+
+  for (i = 0; i < p->pages; i++) {
+    uint page = STACKBASE - ((PGSIZE - 1) * (i + 1));
+    if((pte = walkpgdir(p->pgdir, (void *)page, 0)) == 0)
+      panic("copyuvm: could not get pte");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: PTE_P not set");
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+    if((mem = kalloc()) == 0) {
+      cprintf("copyuvm: kalloc() failed");
+      goto bad;
+    }
+    memmove(mem, (char*)P2V(pa), PGSIZE);
+    if(mappages(d, (void*)page, PGSIZE, V2P(mem), flags) < 0) {
+      cprintf("copyuvm: mappages() failed");
+      goto bad;
+    }
+  }
+
   return d;
 
 bad:
