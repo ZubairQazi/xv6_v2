@@ -230,7 +230,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
     return oldsz;
 
   a = PGROUNDUP(oldsz);
-  for(; a < newsz; a += PGSIZE){
+  for(; a <= newsz; a += PGSIZE){
     mem = kalloc();
     if(mem == 0){
       cprintf("allocuvm out of memory\n");
@@ -332,8 +332,10 @@ copyuvm(struct proc* parent)
   for(i = 0; i < parent->sz; i += PGSIZE){
     if((pte = walkpgdir(parent->pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
-    if(!(*pte & PTE_P))
+    if(!(*pte & PTE_P)) {
+      cprintf("%x", parent->sz);
       panic("copyuvm: page not present");
+    }
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
@@ -342,12 +344,15 @@ copyuvm(struct proc* parent)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
-  return d;
+
+
 
   // to copy it for child, we need a few things
   // i <= address of next available page location
   // stackbase = 0x7FFFF... , PGSIZE = 4096
   // this loop essentially, just goes through the stack, bottom=>top, and copies it
+  //
+  /*
   for (i = 0; i < parent->pages; ++i) {
     uint new_page = STACKBASE - ((PGSIZE-1)*(i+1)); // next available page
     // how we got this in the lab report
@@ -355,7 +360,7 @@ copyuvm(struct proc* parent)
     // we can just copy the loop above checks
     if ( (pte = walkpgdir(parent->pgdir, (void *)new_page, 0)) == 0 );
       cprintf("unable to get next stack apge at new_page=%d=", new_page);
-      panic("copyuvm (stack): unable to get next stack page at new_page");
+      panic("co yuvm (stack): unable t  get next stack page at new_page");
     if (!(*pte & PTE_P))
       cprintf("PTE_P not found on current stack, pte@new_page=%d=", new_page);
       panic("copyuvm (stack): PTE_P not found on current stack");
@@ -368,6 +373,7 @@ copyuvm(struct proc* parent)
       goto bad;
   }
   return d;
+  */
 
 bad:
   freevm(d);

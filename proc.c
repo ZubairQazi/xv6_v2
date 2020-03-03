@@ -138,6 +138,11 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  p->tf->esp = STACKBASE;
+  p->tf->ebp = STACKBASE;
+
+  if(allocuvm(p->pgdir, PGROUNDDOWN(STACKBASE), STACKBASE) == 0)
+    panic("There are problems setting up first user process (defs.h)");
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");

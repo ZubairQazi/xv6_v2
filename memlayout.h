@@ -14,7 +14,7 @@
  address space, so this is the word _right under_ that.
  */
 
-#define STACKBASE 0x7FFFFFFF        // First stack virtual address, KERNBASE - 1
+#define STACKBASE KERNBASE - 0x1        // First stack virtual address, KERNBASE - 1
 
 #define V2P(a) (((uint) (a)) - KERNBASE)
 #define P2V(a) (((void *) (a)) + KERNBASE)
