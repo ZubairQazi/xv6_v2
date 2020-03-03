@@ -345,7 +345,34 @@ copyuvm(struct proc* parent)
       goto bad;
   }
 
-
+  //Second Loop
+    for (int i = 0; i < parent->pages; i++) {
+      //Checks if a PTE is found
+      uint page = STACKBASE - ((PGSIZE-1)*(i+1));
+      if ((pte = walkpgdir(parent->pgdir, (void *)page, 0)) == 0)
+        panic("copyuvm: pte not found");
+      // Checks if PTE_P is found
+      if (!(*pte & PTE_P)){
+        cprintf("%x", page);
+        panic("copyuvm: pte_p not found");
+      }
+      pa = PTE_ADDR(*pte);
+      flags = PTE_FLAGS(*pte);
+      // kalloc() finding a page and checking
+      //mem = kalloc();
+      if ((mem =kalloc())  == 0) {
+        cprintf("copyuvm: kalloc() didn't find a page");
+        goto bad;
+      }
+      // mappages()
+      memmove(mem, (void *)P2V(pa), PGSIZE);
+      if (mappages(d, (void *)page, PGSIZE, V2P(mem), flags) < 0) {
+        cprintf("copyuvm: mappages() doesn't map correctly");
+        goto bad;
+      }
+    }
+  //This was at the end of the original function idk where it goes
+    return d;
 
   // to copy it for child, we need a few things
   // i <= address of next available page location
@@ -427,4 +454,3 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 //PAGEBREAK!
 // Blank page.
-
