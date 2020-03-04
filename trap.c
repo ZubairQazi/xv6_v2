@@ -79,16 +79,18 @@ trap(struct trapframe *tf)
     break;
   case T_PGFLT:
     {
+        // rcr2() returns the address causing PGLFT (stored in control register)
         uint control_reg = rcr2();
         struct proc* p = myproc();
 
+        // In case of page fault, allocaate new page table entry
         if (allocuvm(p->pgdir, PGROUNDDOWN(control_reg), control_reg) == 0) {
-            cprintf("case PGFLT: page allocation failed");
-        exit();
+            cprintf("case PGFLT: page allocation failed\n");
+            exit();
         }
         else {
             p->pages += 1;
-            cprintf("case PGFLT: page allocation succeeded");
+            cprintf("case PGFLT: page allocation succeeded\n");
         }
         break;
     }

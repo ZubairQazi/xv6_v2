@@ -60,9 +60,11 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
+  // attempting to allocate a page at stackbase (below kernel)
   if (allocuvm(pgdir, PGROUNDDOWN(STACKBASE), STACKBASE) == 0)
     goto bad;
 
+  // stack pointer starts at stackbase
   sp = STACKBASE;
 
   // Push argument strings, prepare rest of stack in ustack.
@@ -96,6 +98,7 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  // initializing default page count to 1
   curproc->pages = 1;
   switchuvm(curproc);
   freevm(oldpgdir);
