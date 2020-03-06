@@ -89,8 +89,9 @@ trap(struct trapframe *tf)
             exit();
         }
         else {
+            cprintf("case PGFLT: stack too small, old # of pages=%d=\n", p->pages);
             p->pages += 1;
-            cprintf("case PGFLT: page allocation succeeded\n");
+            cprintf("\tcase PGFLT: had to grow stack, new # of pages=%d=\n", p->pages);
         }
         break;
     }
