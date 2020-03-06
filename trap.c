@@ -90,8 +90,8 @@ trap(struct trapframe *tf)
         exit();
     }
     else {
-        cprintf("case PGLFT: success");
         myproc()->pages += 1;
+        cprintf("case PGLFT: success, pages=%d=\n", myproc()->pages);
     }
     break;
 

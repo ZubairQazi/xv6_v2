@@ -181,6 +181,8 @@ void            freevm(pde_t*);
 void            inituvm(pde_t*, char*, uint);
 int             loaduvm(pde_t*, char*, struct inode*, uint, uint);
 //pde_t*          copyuvm(pde_t*, uint);
+// we changed the signature so we can pass in the proc
+// rather than its components
 pde_t*          copyuvm(struct proc*);
 void            switchuvm(struct proc*);
 void            switchkvm(void);

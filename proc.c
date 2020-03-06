@@ -196,6 +196,7 @@ fork(void)
 
   // Copy process state from proc.
   //if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  // since we changed copyuvm's signature, we have to change how we call
   if ( (np->pgdir = copyuvm(curproc)) == 0 ) {
     kfree(np->kstack);
     np->kstack = 0;
