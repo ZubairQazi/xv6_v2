@@ -310,32 +310,23 @@ clearpteu(pde_t *pgdir, char *uva)
   *pte &= ~PTE_U;
 }
 
-/*
-    TODO 4: copyuvm().  This function is used as part of fork() to create
-    a copy of the address space of the parent process calling fork to the
-    child process.
-*/
-
 // Given a parent process's page table, create a copy
 // of it for a child.
 pde_t*
-copyuvm(struct proc* parent)
+copyuvm(struct proc* p)
 {
-  pde_t *d; // to return value
-  pte_t *pte; // pointer we use to check if when we walkpgdir
-  // if it is null, then we know we cannot walk the parent pg, so we panic
+  pde_t *d;
+  pte_t *pte;
   uint pa, i, flags;
   char *mem;
 
   if((d = setupkvm()) == 0)
     return 0;
-  for(i = 0; i < parent->sz; i += PGSIZE){
-    if((pte = walkpgdir(parent->pgdir, (void *) i, 0)) == 0)
+  for(i = 0; i < p->sz; i += PGSIZE){
+    if((pte = walkpgdir(p->pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
-    if(!(*pte & PTE_P)) {
-      cprintf("%x", parent->sz);
+    if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
-    }
     pa = PTE_ADDR(*pte);
     flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
@@ -344,39 +335,33 @@ copyuvm(struct proc* parent)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
-
+  
   //Second Loop
   // to copy it for child, we need a few things
   // i <= address of next available page location
   // stackbase = 0x7FFFF... , PGSIZE = 4096
   // this loop essentially, just goes through the stack, bottom=>top, and copies it
-    for (int i = 0; i < parent->pages; i++) {
-      //Checks if a PTE is found
-      uint page = STACKBASE - ((PGSIZE-1)*(i+1));
-      if ((pte = walkpgdir(parent->pgdir, (void *)page, 0)) == 0)
-        panic("copyuvm: pte not found");
-      // Checks if PTE_P is found
-      if (!(*pte & PTE_P)){
-        cprintf("%x", page);
-        panic("copyuvm: pte_p not found");
-      }
-      pa = PTE_ADDR(*pte);
-      flags = PTE_FLAGS(*pte);
-      // kalloc() finding a page and checking
-      //mem = kalloc();
-      if ((mem =kalloc())  == 0) {
-        cprintf("copyuvm: kalloc() didn't find a page");
-        goto bad;
-      }
-      // mappages()
-      memmove(mem, (void *)P2V(pa), PGSIZE);
-      if (mappages(d, (void *)page, PGSIZE, V2P(mem), flags) < 0) {
-        cprintf("copyuvm: mappages() doesn't map correctly");
-        goto bad;
-      }
+  for (i = 0; i < p->pages; i++) {
+    uint page = STACKBASE - ((PGSIZE - 1) * (i + 1));
+    if((pte = walkpgdir(p->pgdir, (void *)page, 0)) == 0)
+      panic("copyuvm: could not get pte");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: PTE_P not set");
+    pa = PTE_ADDR(*pte);
+    flags = PTE_FLAGS(*pte);
+    if((mem = kalloc()) == 0) {
+      cprintf("copyuvm: kalloc() failed");
+      goto bad;
     }
+    memmove(mem, (char*)P2V(pa), PGSIZE);
+    if(mappages(d, (void*)page, PGSIZE, V2P(mem), flags) < 0) {
+      cprintf("copyuvm: mappages() failed");
+      goto bad;
+    }
+  }
+  
   //This was at the end of the original function idk where it goes
-    return d;
+  return d;
   
 bad:
   freevm(d);
@@ -430,3 +415,4 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 // Blank page.
 //PAGEBREAK!
 // Blank page.
+

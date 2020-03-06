@@ -17,13 +17,11 @@
     etc...
  */
 
-
 /*
  * DONE:
  *      we removed some `ifs` as we don't need to check
  *      for those conditions anymore
  */
-
 
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
@@ -37,9 +35,8 @@ fetchint(uint addr, int *ip)
 {
 //  struct proc *curproc = myproc();
 
- //  if(addr >= curproc->sz || addr+4 > curproc->sz)
- //  return -1;
-
+//  if(addr >= curproc->sz || addr+4 > curproc->sz)
+//    return -1;
   *ip = *(int*)(addr);
   return 0;
 }
@@ -51,18 +48,17 @@ int
 fetchstr(uint addr, char **pp)
 {
   char *s;
-//  struct proc *curproc = myproc();
+// struct proc *curproc = myproc();
 
 //  if(addr >= curproc->sz)
 //    return -1;
-
   *pp = (char*)addr;
 //  ep = (char*)curproc->sz;
-  s = *pp; 
-  while(*s != 0){
+  s = *pp;
+  while(*s != 0)
     s++;
-  }
-  return (s - *pp) -1;
+
+  return (s - *pp) - 1;
 }
 
 // Fetch the nth 32-bit system call argument.
@@ -83,10 +79,8 @@ argptr(int n, char **pp, int size)
  
   if(argint(n, &i) < 0)
     return -1;
-  //if(size < 0 || (uint)i >= (STACKBASE - ((curproc->pages)*PGSIZE)) ||
-  //        (uint)i+size > (STACKBASE - ((curproc->pages)*PGSIZE)) )
-  //  return -1;
-
+//  if(size < 0 || (uint)i >= curproc->sz || (uint)i+size > curproc->sz)
+//    return -1;
   *pp = (char*)i;
   return 0;
 }
@@ -99,9 +93,8 @@ int
 argstr(int n, char **pp)
 {
   int addr;
-  argint(n, &addr); 
-//  if(argint(n, &addr) < 0)
-//    return -1;
+  if(argint(n, &addr) < 0)
+    return -1;
   return fetchstr(addr, pp);
 }
 

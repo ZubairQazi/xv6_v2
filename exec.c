@@ -18,7 +18,6 @@ exec(char *path, char **argv)
   struct proghdr ph;
   pde_t *pgdir, *oldpgdir;
   struct proc *curproc = myproc();
-  // curproc->pages = 1;
 
   begin_op();
 
@@ -35,14 +34,14 @@ exec(char *path, char **argv)
     goto bad;
   if(elf.magic != ELF_MAGIC)
     goto bad;
-    
+
   if((pgdir = setupkvm()) == 0)
     goto bad;
 
   // Load program into memory.
   sz = 0;
   for(i=0, off=elf.phoff; i<elf.phnum; i++, off+=sizeof(ph)){
-    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph));
+    if(readi(ip, (char*)&ph, off, sizeof(ph)) != sizeof(ph))
       goto bad;
     if(ph.type != ELF_PROG_LOAD)
       continue;
@@ -61,21 +60,8 @@ exec(char *path, char **argv)
   end_op();
   ip = 0;
 
-  /*
-   TODO 1: This is the part of the code that we need to change to move
-          the stack.  The current code calls allocuvm to create two pages, one for the stack
-          and one as a guard page starting at VA sz which is right after the
-          code and data.  It then clears the page table entry for the guard
-          page.
-  */
-
-  // Allocate two pages at the next page boundary.
-  // Make the first inaccessible.  Use the second as the user stack.
-  //sz = PGROUNDUP(sz);
-  //if we assign it in the if statement, whats the point of the above line?
-  // mem: 0x000...0xFFFF, stack is at 0xFFFF, so we alloc from 0xFFF to 0xFADD (S-PG)
-  sz = PGROUNDUP(sz);
-  if ( (sz = allocuvm(pgdir, STACKBASE, (STACKBASE - PGSIZE) )) == 0)
+  // attempting to allocate a page at stackbase (below kernel)
+  if (allocuvm(pgdir, PGROUNDDOWN(STACKBASE), STACKBASE) == 0)
     goto bad;
   // commented out clearpteu() as we dont need to make an inaccessable page anymore
   //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
@@ -114,6 +100,7 @@ exec(char *path, char **argv)
   curproc->sz = sz;
   curproc->tf->eip = elf.entry;  // main
   curproc->tf->esp = sp;
+  // initializing default page count to 1
   curproc->pages = 1;
   switchuvm(curproc);
   freevm(oldpgdir);
