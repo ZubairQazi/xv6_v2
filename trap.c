@@ -79,6 +79,13 @@ trap(struct trapframe *tf)
     break;
   case T_PGFLT:
     {
+  //  if (rcr2() != STACKBASE + (PGSIZE * myproc()->pages))
+//  we check if we cannot allocate a page
+//      if we cannot
+//          then we exit 
+//      else
+//          we successfully allocate a page, increase
+//          the proc's page count and break
         // rcr2() returns the address causing PGLFT (stored in control register)
         uint control_reg = rcr2();
         struct proc* p = myproc();

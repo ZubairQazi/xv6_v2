@@ -63,8 +63,10 @@ exec(char *path, char **argv)
   // attempting to allocate a page at stackbase (below kernel)
   if (allocuvm(pgdir, PGROUNDDOWN(STACKBASE), STACKBASE) == 0)
     goto bad;
-
-  // stack pointer starts at stackbase
+  // commented out clearpteu() as we dont need to make an inaccessable page anymore
+  //clearpteu(pgdir, (char*)(sz - 2*PGSIZE));
+  //sp = sz
+  // change stack pointer from sz to newly created stack base 
   sp = STACKBASE;
 
   // Push argument strings, prepare rest of stack in ustack.

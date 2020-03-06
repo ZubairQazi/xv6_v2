@@ -136,6 +136,7 @@ userinit(void)
   p->tf->es = p->tf->ds;
   p->tf->ss = p->tf->ds;
   p->tf->eflags = FL_IF;
+  // stack pointer now points to the stack rather than the page
   p->tf->esp = STACKBASE;
   p->tf->eip = 0;  // beginning of initcode.S
   p->tf->ebp = STACKBASE;
@@ -194,7 +195,9 @@ fork(void)
   }
 
   // Copy process state from proc.
-  if((np->pgdir = copyuvm(curproc)) == 0){
+  //if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+  // since we changed copyuvm's signature, we have to change how we call
+  if ( (np->pgdir = copyuvm(curproc)) == 0 ) {
     kfree(np->kstack);
     np->kstack = 0;
     np->state = UNUSED;

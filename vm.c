@@ -335,7 +335,12 @@ copyuvm(struct proc* p)
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0)
       goto bad;
   }
-
+  
+  //Second Loop
+  // to copy it for child, we need a few things
+  // i <= address of next available page location
+  // stackbase = 0x7FFFF... , PGSIZE = 4096
+  // this loop essentially, just goes through the stack, bottom=>top, and copies it
   for (i = 0; i < p->pages; i++) {
     uint page = STACKBASE - ((PGSIZE - 1) * (i + 1));
     if((pte = walkpgdir(p->pgdir, (void *)page, 0)) == 0)
@@ -354,9 +359,10 @@ copyuvm(struct proc* p)
       goto bad;
     }
   }
-
+  
+  //This was at the end of the original function idk where it goes
   return d;
-
+  
 bad:
   freevm(d);
   return 0;
